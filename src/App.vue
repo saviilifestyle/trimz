@@ -3,7 +3,7 @@
     <header v-if="!isAdminRoute" class="navbar" :class="{ 'on-dark': onDark }">
       <nav class="nav-links">
         <router-link to="/">Home</router-link>
-        <router-link to="/gallery">Gallery</router-link>
+        <router-link to="/gallery">Pallery</router-link>
       </nav>
     </header>
 
