@@ -1,8 +1,5 @@
 <template>
   <div class="page-wrapper">
-
-
-
     <main class="hero-canvas">
       <!-- Asymmetric Floating Visual Slices (Background Art Layer) -->
       <div class="visual-slice slice-top-right"></div>
@@ -33,38 +30,15 @@
       </div>
     </main>
 
-    <!-- Who We Are Section -->
-    <section class="who-we-are-section" id="contact">
+    <!-- Who We Are Section (contact details now live in the global footer) -->
+    <section class="who-we-are-section">
       <div class="who-we-are-card">
-        <div class="who-we-are-copy">
-          <p class="section-label">Who We Are</p>
-          <h2>Barbershop craft with a polished, modern edge.</h2>
-          <p>
-            We blend classic grooming traditions with a refined, contemporary atmosphere for every
-            visit.
-          </p>
-        </div>
-
-        <div class="who-we-are-details">
-          <div class="detail-item">
-            <span class="detail-label">Email</span>
-            <a href="mailto:hello@trimzbarbers.com">hello@trimzbarbers.com</a>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Phone</span>
-            <a href="tel:+254116848523">+254 116848523</a>
-          </div>
-         <div class="detail-item">
-  <span class="detail-label">Location</span>
-
-    <a href="https://maps.app.goo.gl/aBNQcXTRJskd3SnL7"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    Inside Legacy Bulding,next to Muguna Plaza, Ngong
-  </a>
-</div>
-        </div>
+        <p class="section-label">Who We Are</p>
+        <h2>Barbershop craft with a polished, modern edge.</h2>
+        <p>
+          We blend classic grooming traditions with a refined, contemporary atmosphere for every
+          visit.
+        </p>
       </div>
     </section>
   </div>
@@ -75,7 +49,6 @@
 </script>
 
 <style scoped>
-
 .page-wrapper {
   --color-navy-dark: #0a192f;
   --color-navy-text: #051122;
@@ -352,35 +325,29 @@
 /* Who We Are Section */
 .who-we-are-section {
   max-width: 1200px;
-  margin: 0 auto 5rem auto;
+  margin: 4rem auto 5rem auto;
   padding: 0 2rem;
 }
 
 .who-we-are-card {
-  display: grid;
-  gap: 2rem;
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  padding: 2.5rem;
+  padding: 3rem 2.5rem;
   box-shadow: 0 12px 35px rgba(2, 7, 20, 0.06);
 }
 
-@media (min-width: 768px) {
-  .who-we-are-card {
-    grid-template-columns: 1.2fr 0.8fr;
-    align-items: start;
-  }
-}
-
-.who-we-are-copy h2 {
-  margin: 0.4rem 0 1rem;
+.who-we-are-card h2 {
+  margin: 0.6rem 0 1rem;
   font-family: 'Cormorant Garamond', serif;
   font-size: 2rem;
   line-height: 1.2;
   color: var(--color-navy-text);
 }
 
-.who-we-are-copy p {
+.who-we-are-card p:not(.section-label) {
   margin: 0;
   color: #475569;
   line-height: 1.7;
@@ -393,42 +360,6 @@
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--color-gold-dark);
-}
-
-.who-we-are-details {
-  display: grid;
-  gap: 1rem;
-}
-
-.detail-item {
-  padding: 1rem 0;
-  border-top: 1px solid #e2e8f0;
-}
-
-.detail-item:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-
-.detail-label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--color-navy-dark);
-}
-
-.detail-item a,
-.detail-item p {
-  margin: 0;
-  color: #334155;
-  text-decoration: none;
-}
-
-.detail-item a:hover {
   color: var(--color-gold-dark);
 }
 </style>

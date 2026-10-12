@@ -79,8 +79,52 @@
       </table>
     </section>
 
-      <!-- ============ GALLERY TAB ============ -->
-    <GalleryManager v-if="tab === 'gallery'" @unauthorized="handleLogout" />
+    <!-- ============ GALLERY TAB ============ -->
+    <section v-if="tab === 'gallery'">
+      <div class="gallery-upload">
+        <label class="file-label">
+          Photo
+          <input
+            ref="galleryFile"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            @change="onGalleryFile"
+          />
+        </label>
+        <label class="file-label">
+          Caption (optional)
+          <input v-model="galleryCaption" type="text" maxlength="120" />
+        </label>
+        <button
+          class="btn-primary"
+          :disabled="!galleryFileObj || uploadingGallery"
+          @click="uploadGalleryPhoto"
+        >
+          {{ uploadingGallery ? 'Uploading…' : 'Upload' }}
+        </button>
+      </div>
+      <p v-if="galleryError" class="error-msg">{{ galleryError }}</p>
+
+      <div v-if="loadingGallery" class="loading-note">Loading…</div>
+      <p v-else-if="!galleryPhotos.length" class="loading-note">
+        No photos yet. Upload the first one above.
+      </p>
+      <ul v-else class="gallery-admin-grid">
+        <li v-for="p in galleryPhotos" :key="p.id">
+          <img :src="p.photo_url" :alt="p.caption || 'Gallery photo'" />
+          <div class="gallery-admin-meta">
+            <input
+              v-model="p.caption"
+              type="text"
+              maxlength="120"
+              placeholder="Caption"
+              @change="saveCaption(p)"
+            />
+            <button @click="deleteGalleryPhoto(p.id)">Delete</button>
+          </div>
+        </li>
+      </ul>
+    </section>
 
     <!-- ============ SERVICE MODAL ============ -->
     <div v-if="serviceModal.open" class="modal-backdrop" @click.self="serviceModal.open = false">
@@ -137,7 +181,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import GalleryManager from './GalleryManagerView.vue'
 
 const API_BASE = 'http://127.0.0.1:8000/api'
 const router = useRouter()
@@ -367,6 +410,91 @@ async function reactivateBarber(b) {
   loadBarbers()
 }
 
+/* ---------------- Gallery ---------------- */
+
+const galleryPhotos = ref([])
+const loadingGallery = ref(true)
+const galleryFile = ref(null) // the <input type="file"> element
+const galleryFileObj = ref(null) // the chosen File
+const galleryCaption = ref('')
+const uploadingGallery = ref(false)
+const galleryError = ref('')
+
+async function loadGallery() {
+  loadingGallery.value = true
+  try {
+    const res = await fetch(`${API_BASE}/gallery`)
+    if (!res.ok) throw new Error('Gallery request failed')
+    galleryPhotos.value = await res.json()
+  } catch (e) {
+    console.error(e)
+    galleryError.value = 'Could not load the gallery.'
+  } finally {
+    loadingGallery.value = false
+  }
+}
+
+function onGalleryFile(e) {
+  galleryFileObj.value = e.target.files[0] || null
+}
+
+async function uploadGalleryPhoto() {
+  if (!galleryFileObj.value) return
+  galleryError.value = ''
+  uploadingGallery.value = true
+
+  const formData = new FormData()
+  formData.append('photo', galleryFileObj.value)
+  if (galleryCaption.value.trim()) formData.append('caption', galleryCaption.value.trim())
+
+  try {
+    const res = await fetch(`${API_BASE}/gallery`, {
+      method: 'POST',
+      headers: authHeaders(), // no Content-Type here - the browser sets the multipart boundary itself
+      body: formData,
+    })
+    if (res.status === 401) return handleLogout()
+    const data = await res.json()
+    if (!res.ok) {
+      galleryError.value =
+        Object.values(data.errors || {}).flat().join(' ') ||
+        data.error ||
+        data.message ||
+        'Upload failed.'
+      return
+    }
+    galleryCaption.value = ''
+    galleryFileObj.value = null
+    if (galleryFile.value) galleryFile.value.value = ''
+    loadGallery()
+  } catch (e) {
+    console.error(e)
+    galleryError.value = 'Upload failed.'
+  } finally {
+    uploadingGallery.value = false
+  }
+}
+
+async function saveCaption(p) {
+  try {
+    const res = await fetch(`${API_BASE}/gallery/${p.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ caption: p.caption }),
+    })
+    if (res.status === 401) handleLogout()
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+async function deleteGalleryPhoto(id) {
+  if (!confirm('Delete this photo? This cannot be undone.')) return
+  const res = await fetch(`${API_BASE}/gallery/${id}`, { method: 'DELETE', headers: authHeaders() })
+  if (res.status === 401) return handleLogout()
+  loadGallery()
+}
+
 /* ---------------- Shared ---------------- */
 
 async function handleLogout() {
@@ -377,12 +505,14 @@ async function handleLogout() {
   }
   localStorage.removeItem('adminToken')
   localStorage.removeItem('adminName')
+  localStorage.removeItem('adminRole')
   router.push('/admin/login')
 }
 
 onMounted(() => {
   loadServices()
   loadBarbers()
+  loadGallery()
 })
 </script>
 
@@ -428,6 +558,18 @@ table.ledger tr.inactive { opacity: 0.5; }
 .row-actions button.danger:hover { border-color: #dc2626; color: #dc2626; }
 
 .loading-note { padding: 30px; text-align: center; color: #6b7280; }
+
+/* Gallery tab */
+.gallery-upload { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 16px; }
+.file-label { display: flex; flex-direction: column; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; gap: 5px; }
+.file-label input[type="text"] { padding: 9px 10px; border: 1.5px solid #d8d3c8; border-radius: 4px; font-family: inherit; font-size: 13.5px; min-width: 240px; }
+.gallery-admin-grid { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+.gallery-admin-grid li { background: white; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.gallery-admin-grid img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.gallery-admin-meta { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.gallery-admin-meta input { padding: 7px 8px; border: 1.5px solid #d8d3c8; border-radius: 4px; font-family: inherit; font-size: 12.5px; }
+.gallery-admin-meta button { font-size: 11.5px; padding: 6px 9px; border-radius: 4px; border: 1.5px solid #d8d3c8; background: white; cursor: pointer; }
+.gallery-admin-meta button:hover { border-color: #dc2626; color: #dc2626; }
 
 /* Modal */
 .modal-backdrop {
